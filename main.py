@@ -12,6 +12,8 @@ if "score" not in st.session_state:
     st.session_state.score = 0
 if "current" not in st.session_state:
     st.session_state.current = 0
+if "last_feedback" not in st.session_state:
+    st.session_state.last_feedback = ""
 
 st.title("Nigeria Trivia Quiz")
 difficulty = st.selectbox("Select Difficulty", ["easy", "medium", "hard"])
@@ -24,8 +26,9 @@ if st.button("Start Quiz") and not st.session_state.started:
     st.session_state.score = 0
     st.session_state.current = 0
     st.session_state.started = True
+    st.session_state.last_feedback = ""
 
-# Only show question if quiz started
+# Show question if quiz started
 if st.session_state.started and st.session_state.current < len(st.session_state.questions):
     q = st.session_state.questions[st.session_state.current]
     st.subheader(f"Q{st.session_state.current + 1}: {html.unescape(q['question'])}")
@@ -33,14 +36,21 @@ if st.session_state.started and st.session_state.current < len(st.session_state.
     options = q["incorrect_answers"] + [q["correct_answer"]]
     random.shuffle(options)
 
-    # Use a form to prevent rerun on every interaction
     with st.form(key=f"question_form_{st.session_state.current}"):
         user_answer = st.radio("Choose an answer:", options)
         submit = st.form_submit_button("Submit Answer")
         if submit:
             if user_answer == q["correct_answer"]:
                 st.session_state.score += 1
+                st.session_state.last_feedback = "Correct!"
+            else:
+                st.session_state.last_feedback = f"Wrong! Correct answer: {q['correct_answer']}"
             st.session_state.current += 1
+
+    # Show feedback for last question
+    if st.session_state.last_feedback:
+        st.info(st.session_state.last_feedback)
+    st.write(f"Current Score: {st.session_state.score}")
 
 # Show final score
 if st.session_state.started and st.session_state.current >= len(st.session_state.questions):
